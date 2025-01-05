@@ -20,7 +20,6 @@ struct CluePosition
     string direction;
     string word;
 };
-// File to store user credentials
 const string USERS_FILE = "users.txt";
 const string LEADERBOARD_FILE = "leaderboard.txt";
 
@@ -33,7 +32,6 @@ void clearScreen()
     system("clear"); // For Linux/Mac
 #endif
 }
-
 // Function to display the header with centered text and blinking effect
 void displayHeader()
 {
@@ -298,7 +296,6 @@ void saveLeaderboard(const string &username, int score, int timeTaken)
     }
 }
 
-// Function to display the leaderboard
 void displayLeaderboard()
 {
     ifstream file(LEADERBOARD_FILE);
@@ -490,6 +487,7 @@ void playCrosswordPuzzle(const string &username)
             int timeTaken = chrono::duration_cast<chrono::seconds>(endTime - startTime).count();
             int score = max(100 - timeTaken / 10, 10); // Decrease score based on time, minimum 10 points
 
+            // In playCrosswordPuzzle() after winning
             saveLeaderboard(username, score, timeTaken);
             displayLeaderboard();
             break;
@@ -617,6 +615,7 @@ int main()
         cout << "3. Start Game\n";
         cout << "4. View Features\n";
         cout << "5. Exit\n";
+        cout << "6. View Leaderboard\n"; // Added new option
         cout << "Choose an option: ";
 
         int choice;
@@ -654,6 +653,10 @@ int main()
         {
             cout << "Exiting the game. Goodbye!\n";
             break;
+        }
+        else if (choice == 6)
+        {
+            displayLeaderboard();
         }
         else
         {

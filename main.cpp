@@ -32,14 +32,15 @@ void clearScreen()
     system("clear"); // For Linux/Mac
 #endif
 }
+string colorCyan = "\033[1;36m";
+string colorYellow = "\033[1;33m";
+string colorMagenta = "\033[1;35m";
+string colorGreen = "\033[1;32m";
+string colorDONT = "\033[1;34m";
+string resetColor = "\033[0m";
 // Function to display the header with centered text and blinking effect
 void displayHeader()
 {
-    string colorCyan = "\033[1;36m";
-    string colorYellow = "\033[1;33m";
-    string colorMagenta = "\033[1;35m";
-    string colorGreen = "\033[1;32m";
-    string resetColor = "\033[0m";
 
     string headerText = R"(
    _____                      _       _____           _       _ 
@@ -103,7 +104,9 @@ void displayHeader()
 // Function to display the game features
 void displayGameFeatures()
 {
-    cout << "\n=== GAME FEATURES ===\n";
+    cout << colorDONT;
+    cout
+        << "\n=== GAME FEATURES ===\n";
     cout << "- Grid: A rectangular grid of black and white squares for solving clues.\n";
     cout << "- Clues: A set of clues leading to answers.\n";
     cout << "- Levels: Different levels of difficulty for all abilities.\n";
@@ -118,6 +121,7 @@ void displayGameFeatures()
     cout << "- Help: Reveal letters, words, or the entire puzzle.\n";
     cout << "- Show Errors: Highlight incorrect letters.\n";
     cout << "- Clear Errors: Remove incorrect letters easily.\n";
+    cout << resetColor << endl;
 }
 
 // Function to initialize the crossword grid with numbers for clues
@@ -130,6 +134,7 @@ vector<vector<string>> initializeGrid(int rows, int cols)
 // Function to display the crossword grid with numbers for clues
 void displayGrid(const vector<vector<string>> &grid)
 {
+    cout << colorYellow;
     cout << "\n=== CROSSWORD PUZZLE ===\n";
     for (int i = 0; i < grid.size(); i++)
     {
@@ -151,6 +156,7 @@ void displayGrid(const vector<vector<string>> &grid)
         cout << "+---";
     }
     cout << "+\n";
+    cout << resetColor << endl;
 }
 // Function to load user credentials from a file
 unordered_map<string, string> loadUserCredentials()
@@ -208,7 +214,9 @@ void registerUser(unordered_map<string, string> &users)
 
     users[username] = password;
     saveUserCredentials(users);
+    cout << colorYellow;
     cout << "Registration successful! You can now log in.\n";
+    cout << resetColor << endl;
 }
 
 // Function to handle user login
@@ -224,7 +232,9 @@ bool loginUser(const unordered_map<string, string> &users)
     auto it = users.find(username);
     if (it != users.end() && it->second == password)
     {
+        cout << colorCyan;
         cout << "Login successful! Welcome, " << username << "!\n";
+        cout << resetColor << endl;
         return true;
     }
 
@@ -298,6 +308,7 @@ void saveLeaderboard(const string &username, int score, int timeTaken)
 
 void displayLeaderboard()
 {
+    cout << colorMagenta;
     ifstream file(LEADERBOARD_FILE);
     if (file.is_open())
     {
@@ -315,6 +326,7 @@ void displayLeaderboard()
     {
         cout << "No leaderboard data found.\n";
     }
+    cout << resetColor << endl;
 }
 // Modify the isGridComplete function to check clues instead of the whole grid
 bool isGridComplete(const vector<vector<string>> &grid, const vector<CluePosition> &cluePositions)
@@ -460,17 +472,21 @@ void playCrosswordPuzzle(const string &username)
     displayGrid(grid);
 
     // Display clues
+    cout << colorGreen;
     cout << "\n=== ACROSS CLUES ===\n";
     for (const auto &clue : acrossClues)
     {
         cout << clue.first << "\n";
     }
+    cout << resetColor << endl;
 
+    cout << colorYellow;
     cout << "\n=== DOWN CLUES ===\n";
     for (const auto &clue : downClues)
     {
         cout << clue.first << "\n";
     }
+    cout << resetColor << endl;
 
     // Start the timer
     auto startTime = chrono::steady_clock::now();
@@ -492,11 +508,12 @@ void playCrosswordPuzzle(const string &username)
             displayLeaderboard();
             break;
         }
-
+        cout << colorCyan;
         cout << "\n=== OPTIONS ===\n";
         cout << "1. Enter an Answer\n";
         cout << "2. Use a Hint\n";
         cout << "3. Exit to Main Menu\n";
+        cout << resetColor << endl;
         cout << "Choose an option: ";
         int choice = 0; // Initialize choice to a default value
         cin >> choice;
@@ -532,8 +549,9 @@ void playCrosswordPuzzle(const string &username)
                 // Check if the answer is correct
                 if (cluePos->word == userAnswer)
                 {
+                    cout << colorYellow;
                     cout << "Correct! The word has been placed on the grid.\n";
-
+                    cout << resetColor << endl;
                     // Place the word in the grid
                     if (cluePos->direction == "across")
                     {
@@ -606,7 +624,7 @@ int main()
     unordered_map<string, string> users = loadUserCredentials();
     bool loggedIn = false;
     string username;
-
+    cout << colorDONT;
     while (true)
     {
         cout << "\n=== MAIN MENU ===\n";
@@ -663,6 +681,6 @@ int main()
             cout << "Invalid choice. Please try again.\n";
         }
     }
-
+    cout << resetColor << endl;
     return 0;
 }

@@ -8,6 +8,7 @@
 #include <fstream>   // For file handling
 #include <algorithm> // For transform
 #include <ctime>     // For timer
+#include <cstdlib>   // For rand() and srand()
 using namespace std;
 
 // File to store user credentials
@@ -38,7 +39,7 @@ void displayHeader()
   / ____|                    | |     |  __ \         | |     | |
  | |      ___  _ __  ___   __| | ___ | |__) |_ _  ___| | __ _| |
  | |     / _ \| '_ \/ __| / _` |/ _ \|  ___/ _` |/ __| |/ _` | |
- | |____| (_) | | | \__ \| (_| | (_) | |  | (_| | (__| | (_| | |
+ | |____| (_) | | | \__ \| (_, | (_) | |  | (_, | (__| | (_, | |
   \_____|\___/|_| |_|___(_)__,_|\___/|_|   \__,_|\___|_|\__,_|_| 
     )";
 
@@ -92,11 +93,10 @@ void displayHeader()
     }
 }
 
-// Function to display the game description with features
-void displayGameDescription()
+// Function to display the game features
+void displayGameFeatures()
 {
-    cout << "\n=== WELCOME TO THE CROSSWORD PUZZLE GAME ===\n";
-    cout << "Features include:\n";
+    cout << "\n=== GAME FEATURES ===\n";
     cout << "- Grid: A rectangular grid of black and white squares for solving clues.\n";
     cout << "- Clues: A set of clues leading to answers.\n";
     cout << "- Levels: Different levels of difficulty for all abilities.\n";
@@ -113,26 +113,38 @@ void displayGameDescription()
     cout << "- Clear Errors: Remove incorrect letters easily.\n";
 }
 
-// Function to initialize the crossword grid
-vector<vector<char>> initializeGrid(int rows, int cols)
+// Function to initialize the crossword grid with numbers for clues
+vector<vector<string>> initializeGrid(int rows, int cols)
 {
-    return vector<vector<char>>(rows, vector<char>(cols, '-'));
+    vector<vector<string>> grid(rows, vector<string>(cols, " "));
+    return grid;
 }
 
-// Function to display the crossword grid
-void displayGrid(const vector<vector<char>> &grid)
+// Function to display the crossword grid with numbers for clues
+void displayGrid(const vector<vector<string>> &grid)
 {
     cout << "\n=== CROSSWORD PUZZLE ===\n";
-    for (const auto &row : grid)
+    for (int i = 0; i < grid.size(); i++)
     {
-        for (char cell : row)
+        for (int j = 0; j < grid[0].size(); j++)
         {
-            cout << cell << " ";
+            cout << "+---";
         }
-        cout << "\n";
-    }
-}
+        cout << "+\n";
 
+        for (int j = 0; j < grid[0].size(); j++)
+        {
+            cout << "| " << grid[i][j] << " ";
+        }
+        cout << "|\n";
+    }
+
+    for (int j = 0; j < grid[0].size(); j++)
+    {
+        cout << "+---";
+    }
+    cout << "+\n";
+}
 // Function to load user credentials from a file
 unordered_map<string, string> loadUserCredentials()
 {
@@ -214,27 +226,27 @@ bool loginUser(const unordered_map<string, string> &users)
 }
 
 // Function to check if a word can be placed in the grid
-bool canPlaceWord(const vector<vector<char>> &grid, const string &word, int row, int col, const string &direction)
+bool canPlaceWord(vector<vector<string>> &grid, const string &word, int row, int col, const string &direction)
 {
-    if (direction == "horizontal")
+    if (direction == "across")
     {
         if (col + word.length() > grid[0].size())
             return false; // Check bounds
         for (int i = 0; i < word.length(); i++)
         {
-            if (grid[row][col + i] != '-' && grid[row][col + i] != word[i])
+            if (grid[row][col + i] != " " && grid[row][col + i] != string(1, word[i]))
             {
                 return false; // Conflict with existing letters
             }
         }
     }
-    else if (direction == "vertical")
+    else if (direction == "down")
     {
         if (row + word.length() > grid.size())
             return false; // Check bounds
         for (int i = 0; i < word.length(); i++)
         {
-            if (grid[row + i][col] != '-' && grid[row + i][col] != word[i])
+            if (grid[row + i][col] != " " && grid[row + i][col] != string(1, word[i]))
             {
                 return false; // Conflict with existing letters
             }
@@ -248,20 +260,20 @@ bool canPlaceWord(const vector<vector<char>> &grid, const string &word, int row,
 }
 
 // Function to place a word in the grid
-void placeWord(vector<vector<char>> &grid, const string &word, int row, int col, const string &direction)
+void placeWord(vector<vector<string>> &grid, const string &word, int row, int col, const string &direction)
 {
-    if (direction == "horizontal")
+    if (direction == "across")
     {
         for (int i = 0; i < word.length(); i++)
         {
-            grid[row][col + i] = word[i];
+            grid[row][col + i] = string(1, word[i]);
         }
     }
-    else if (direction == "vertical")
+    else if (direction == "down")
     {
         for (int i = 0; i < word.length(); i++)
         {
-            grid[row + i][col] = word[i];
+            grid[row + i][col] = string(1, word[i]);
         }
     }
 }
@@ -302,69 +314,91 @@ void displayLeaderboard()
 // Function to play the crossword puzzle
 void playCrosswordPuzzle(const string &username)
 {
-    int rows, cols;
-    cout << "\nEnter the number of rows and columns for the grid (e.g., 10 10): ";
-    cin >> rows >> cols;
+    int rows = 15, cols = 15; // Larger grid to accommodate more words
+    vector<vector<string>> grid = initializeGrid(rows, cols);
 
-    vector<vector<char>> grid = initializeGrid(rows, cols); // Initialize grid
-    vector<string> clues = {"1. Opposite of down", "2. Four-legged pet", "3. A color of the sky"};
-    vector<string> answers = {"UP", "DOG", "BLUE"};
-    vector<bool> solved(answers.size(), false); // Track solved clues
-    vector<int> attempts(answers.size(), 0);    // Track attempts per clue
-    int score = 0;                              // User's score
-    int hintPoints = 3;                         // Default hint points
+    // Across Clues
+    vector<pair<string, string>> acrossClues = {
+        {"1. Opposite of down", "UP"},
+        {"3. A color of the sky", "BLUE"},
+        {"5. A metal used in jewelry", "GOLD"},
+        {"7. Opposite of cold", "HOT"},
+        {"9. The largest planet in the solar system", "JUPITER"},
+        {"11. A yellow fruit", "BANANA"},
+        {"13. A famous wizard from Harry Potter", "HARRY"},
+        {"15. A common table utensil", "SPOON"},
+        {"17. The fastest land animal", "CHEETAH"},
+        {"19. Something you wear on your feet", "SHOES"},
+        {"21. A room where you cook", "KITCHEN"},
+        {"23. The first meal of the day", "BREAKFAST"},
+        {"25. A large mammal that lives in the ocean", "WHALE"},
+        {"27. A color of grass", "GREEN"},
+        {"29. A geometric shape with four equal sides", "SQUARE"},
+        {"31. A precious metal", "SILVER"},
+        {"33. A game involving kings, queens, and knights", "CHESS"},
+        {"35. An animal known for its quills", "PORCUPINE"},
+        {"37. A day of the weekend", "SUNDAY"},
+        {"39. A season when leaves fall", "AUTUMN"}};
 
-    auto displayClues = [&]()
+    // Down Clues
+    vector<pair<string, string>> downClues = {
+        {"2. Four-legged pet", "DOG"},
+        {"4. A type of tree with acorns", "OAK"},
+        {"6. A bird that cannot fly", "PENGUIN"},
+        {"8. A precious stone that's red", "RUBY"},
+        {"10. Popular programming language", "PYTHON"},
+        {"12. A vehicle with two wheels", "BIKE"},
+        {"14. A sweet treat made of chocolate", "CANDY"},
+        {"16. Opposite of left", "RIGHT"},
+        {"18. A fruit that is often red and round", "APPLE"},
+        {"20. A popular search engine", "GOOGLE"},
+        {"22. A unit of distance in kilometers", "MILE"},
+        {"24. A day of love in February", "VALENTINE"},
+        {"26. A famous superhero with a bat symbol", "BATMAN"},
+        {"28. A large body of saltwater", "OCEAN"},
+        {"30. A tool used for cutting", "KNIFE"},
+        {"32. A planet with rings", "SATURN"},
+        {"34. The opposite of happy", "SAD"},
+        {"36. A common farm animal that gives milk", "COW"},
+        {"38. A shiny object found in a pirate's chest", "TREASURE"},
+        {"40. A long yellow pasta", "SPAGHETTI"}};
+
+    // Place numbers for clues in the grid
+    grid[0][0] = "1";   // Across
+    grid[0][2] = "3";   // Across
+    grid[0][4] = "5";   // Across
+    grid[0][6] = "7";   // Across
+    grid[0][8] = "9";   // Across
+    grid[0][10] = "11"; // Across
+    grid[0][12] = "13"; // Across
+    grid[2][0] = "2";   // Down
+    grid[4][0] = "4";   // Down
+    grid[6][0] = "6";   // Down
+    grid[8][0] = "8";   // Down
+    grid[10][0] = "10"; // Down
+    grid[12][0] = "12"; // Down
+
+    // Display the grid
+    displayGrid(grid);
+
+    // Display clues
+    cout << "\n=== ACROSS CLUES ===\n";
+    for (const auto &clue : acrossClues)
     {
-        cout << "\n=== CLUES ===\n";
-        for (size_t i = 0; i < clues.size(); i++)
-        {
-            cout << (i + 1) << ". " << clues[i];
-            if (solved[i])
-            {
-                cout << " (Solved)";
-            }
-            cout << "\n";
-        }
-    };
+        cout << clue.first << "\n";
+    }
 
-    auto useHint = [&]()
+    cout << "\n=== DOWN CLUES ===\n";
+    for (const auto &clue : downClues)
     {
-        if (hintPoints > 0)
-        {
-            cout << "You have " << hintPoints << " hint points remaining.\n";
-            cout << "Enter the clue number to reveal its answer: ";
-            int clueNumber;
-            cin >> clueNumber;
-
-            if (clueNumber > 0 && clueNumber <= static_cast<int>(answers.size()) && !solved[clueNumber - 1])
-            {
-                cout << "Hint: The answer to clue " << clueNumber << " is \"" << answers[clueNumber - 1] << "\".\n";
-                hintPoints--;
-            }
-            else if (solved[clueNumber - 1])
-            {
-                cout << "This clue is already solved.\n";
-            }
-            else
-            {
-                cout << "Invalid clue number. Try again.\n";
-            }
-        }
-        else
-        {
-            cout << "No hint points remaining!\n";
-        }
-    };
+        cout << clue.first << "\n";
+    }
 
     // Start the timer
     auto startTime = chrono::steady_clock::now();
 
     while (true)
     {
-        displayGrid(grid);
-        displayClues();
-
         cout << "\n=== OPTIONS ===\n";
         cout << "1. Enter an Answer\n";
         cout << "2. Use a Hint\n";
@@ -379,59 +413,72 @@ void playCrosswordPuzzle(const string &username)
             int clueNumber;
             cin >> clueNumber;
 
-            if (clueNumber > 0 && clueNumber <= static_cast<int>(answers.size()) && !solved[clueNumber - 1])
+            cout << "Enter the direction (across/down): ";
+            string direction;
+            cin >> direction;
+
+            cout << "Enter your answer: ";
+            string userAnswer;
+            cin >> userAnswer;
+
+            // Convert to uppercase for consistency
+            transform(userAnswer.begin(), userAnswer.end(), userAnswer.begin(), ::toupper);
+
+            // Check if the answer matches any clue
+            bool correct = false;
+            if (direction == "across")
             {
-                if (attempts[clueNumber - 1] >= 3)
+                for (const auto &clue : acrossClues)
                 {
-                    cout << "You have used all 3 attempts for this clue.\n";
-                    continue;
-                }
-
-                cout << "Enter your answer: ";
-                string userAnswer;
-                cin >> userAnswer;
-
-                // Convert to uppercase for consistency
-                transform(userAnswer.begin(), userAnswer.end(), userAnswer.begin(), ::toupper);
-
-                if (userAnswer == answers[clueNumber - 1])
-                {
-                    cout << "Correct! The word has been placed on the grid.\n";
-
-                    // Place the word in the grid
-                    int row = clueNumber - 1; // Place words in different rows for simplicity
-                    int col = 0;
-                    string direction = "horizontal";
-
-                    if (canPlaceWord(grid, userAnswer, row, col, direction))
+                    if (clue.first.find(to_string(clueNumber)) != string::npos && clue.second == userAnswer)
                     {
-                        placeWord(grid, userAnswer, row, col, direction);
-                        solved[clueNumber - 1] = true;
-                        score += 10; // Award 10 points for each correct answer
+                        correct = true;
+                        break;
                     }
-                    else
-                    {
-                        cout << "Failed to place the word. Check boundaries or conflicts.\n";
-                    }
-                }
-                else
-                {
-                    cout << "Incorrect answer. Try again.\n";
-                    attempts[clueNumber - 1]++;
                 }
             }
-            else if (solved[clueNumber - 1])
+            else if (direction == "down")
             {
-                cout << "This clue is already solved.\n";
+                for (const auto &clue : downClues)
+                {
+                    if (clue.first.find(to_string(clueNumber)) != string::npos && clue.second == userAnswer)
+                    {
+                        correct = true;
+                        break;
+                    }
+                }
+            }
+
+            if (correct)
+            {
+                cout << "Correct! The word has been placed on the grid.\n";
+
+                // Place the word in the grid
+                if (direction == "across")
+                {
+                    for (int i = 0; i < userAnswer.length(); i++)
+                    {
+                        grid[0][i] = string(1, userAnswer[i]);
+                    }
+                }
+                else if (direction == "down")
+                {
+                    for (int i = 0; i < userAnswer.length(); i++)
+                    {
+                        grid[i][0] = string(1, userAnswer[i]);
+                    }
+                }
+
+                displayGrid(grid);
             }
             else
             {
-                cout << "Invalid clue number. Try again.\n";
+                cout << "Incorrect answer. Try again.\n";
             }
         }
         else if (choice == 2)
         {
-            useHint();
+            cout << "Hint feature not implemented yet.\n";
         }
         else if (choice == 3)
         {
@@ -442,14 +489,6 @@ void playCrosswordPuzzle(const string &username)
         {
             cout << "Invalid option. Please try again.\n";
         }
-
-        // Check if all clues are solved
-        if (all_of(solved.begin(), solved.end(), [](bool s)
-                   { return s; }))
-        {
-            cout << "Congratulations! You've solved the crossword puzzle!\n";
-            break;
-        }
     }
 
     // Stop the timer
@@ -457,7 +496,7 @@ void playCrosswordPuzzle(const string &username)
     int timeTaken = chrono::duration_cast<chrono::seconds>(endTime - startTime).count();
 
     // Save the user's score and time to the leaderboard
-    saveLeaderboard(username, score, timeTaken);
+    saveLeaderboard(username, 100, timeTaken); // Default score of 100 for now
 
     // Display the leaderboard
     displayLeaderboard();
@@ -466,7 +505,6 @@ void playCrosswordPuzzle(const string &username)
 int main()
 {
     displayHeader();
-    displayGameDescription();
     unordered_map<string, string> users = loadUserCredentials();
     bool loggedIn = false;
     string username;
@@ -477,7 +515,8 @@ int main()
         cout << "1. Login\n";
         cout << "2. Register\n";
         cout << "3. Start Game\n";
-        cout << "4. Exit\n";
+        cout << "4. View Features\n";
+        cout << "5. Exit\n";
         cout << "Choose an option: ";
 
         int choice;
@@ -508,6 +547,10 @@ int main()
             }
         }
         else if (choice == 4)
+        {
+            displayGameFeatures();
+        }
+        else if (choice == 5)
         {
             cout << "Exiting the game. Goodbye!\n";
             break;

@@ -11,6 +11,14 @@
 #include <cstdlib>   // For rand() and srand()
 using namespace std;
 
+// Structure to store clue positions
+    struct CluePosition {
+        int row;
+        int col;
+        string number;
+        string direction;
+        string word;
+    };
 // File to store user credentials
 const string USERS_FILE = "users.txt";
 const string LEADERBOARD_FILE = "leaderboard.txt";
@@ -310,7 +318,52 @@ void displayLeaderboard()
         cout << "No leaderboard data found.\n";
     }
 }
-
+// Add this function to check if the grid is completely filled correctly
+bool isGridComplete(const vector<vector<string>>& grid, const vector<CluePosition>& cluePositions) {
+    // Check each clue position to see if the word is correctly placed
+    for (const auto& clue : cluePositions) {
+        string word = clue.word;
+        int row = clue.row;
+        int col = clue.col;
+        
+        if (clue.direction == "across") {
+            for (size_t i = 0; i < word.length(); i++) {
+                if (grid[row][col + i] != string(1, word[i])) {
+                    return false;
+                }
+            }
+        } else { // down
+            for (size_t i = 0; i < word.length(); i++) {
+                if (grid[row + i][col] != string(1, word[i])) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+// Function to display victory animation
+void displayVictoryMessage() {
+    clearScreen();
+    string colorGreen = "\033[1;32m";
+    string resetColor = "\033[0m";
+    
+    cout << colorGreen;
+    cout << R"(
+   ____                            _         _ 
+  / ___|___  _ __   __ _ _ __ __ _| |_ ___  | |
+ | |   / _ \| '_ \ / _` | '__/ _` | __/ __| | |
+ | |__| (_) | | | | (_| | | | (_| | |_\__ \ |_|
+  \____\___/|_| |_|\__, |_|  \__,_|\__|___/ (_)
+                   |___/                        
+    )" << endl;
+    
+    cout << "\n🎉 Congratulations! You've completed the crossword puzzle! 🎉" << endl;
+    cout << "You're a crossword master!" << endl;
+    cout << resetColor << endl;
+    
+    this_thread::sleep_for(chrono::seconds(3));
+}
 // Function to play the crossword puzzle
 void playCrosswordPuzzle(const string &username) {
     int rows = 10, cols = 10; // Smaller grid size
@@ -333,14 +386,7 @@ void playCrosswordPuzzle(const string &username) {
         {"10. Popular programming language", "PYTHON"}
     };
 
-    // Structure to store clue positions
-    struct CluePosition {
-        int row;
-        int col;
-        string number;
-        string direction;
-        string word;
-    };
+    
     vector<CluePosition> cluePositions;
 
     // Random number generator
@@ -399,8 +445,21 @@ void playCrosswordPuzzle(const string &username) {
     // Start the timer
     auto startTime = chrono::steady_clock::now();
 
-    // Game loop
     while (true) {
+        // Check for win condition
+        if (isGridComplete(grid, cluePositions)) {
+            displayVictoryMessage();
+            
+            // Calculate final score based on time taken
+            auto endTime = chrono::steady_clock::now();
+            int timeTaken = chrono::duration_cast<chrono::seconds>(endTime - startTime).count();
+            int score = max(100 - timeTaken/10, 10); // Decrease score based on time, minimum 10 points
+            
+            saveLeaderboard(username, score, timeTaken);
+            displayLeaderboard();
+            break;
+        }
+
         cout << "\n=== OPTIONS ===\n";
         cout << "1. Enter an Answer\n";
         cout << "2. Use a Hint\n";

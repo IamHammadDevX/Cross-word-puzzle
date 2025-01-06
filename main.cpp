@@ -21,7 +21,8 @@ struct CluePosition
     string word;
 };
 
-struct Clue {
+struct Clue
+{
     string number;
     string direction;
     int row;
@@ -48,23 +49,62 @@ string colorMagenta = "\033[1;35m";
 string colorGreen = "\033[1;32m";
 string colorDONT = "\033[1;34m";
 string resetColor = "\033[0m";
+string colorRed = "\033[1;31m";
+string colorBlue = "\033[1;34m";
+string colorWhite = "\033[1;37m";
+string colorBlack = "\033[1;30m";
+string colorBrightCyan = "\033[1;96m";
+string colorBrightGreen = "\033[1;92m";
+string colorBrightYellow = "\033[1;93m";
+string colorBrightMagenta = "\033[1;95m";
+string colorBrightRed = "\033[1;91m";
+string colorBrightBlue = "\033[1;94m";
+string colorBrightWhite = "\033[1;97m";
+string colorDimGray = "\033[2;37m"; // Dimmed gray
+string textBold = "\033[1m";
+string textDim = "\033[2m";
+string textItalic = "\033[3m";
+string textUnderline = "\033[4m";
+string textBlink = "\033[5m";
+string textInverse = "\033[7m"; // Swap foreground and background colors
+string textHidden = "\033[8m";
+string textStrikeThrough = "\033[9m";
+string textReset = "\033[0m"; // Reset all styles
+
 // Function to display the header with centered text and blinking effect
 void displayHeader()
 {
+    clearScreen(); // Clear the screen for a fresh start
 
-    string headerText = R"(
+    string headerText1 = R"(
    _____                      _       _____           _       _ 
   / ____|                    | |     |  __ \         | |     | |
  | |      ___  _ __  ___   __| | ___ | |__) |_ _  ___| | __ _| |
  | |     / _ \| '_ \/ __| / _` |/ _ \|  ___/ _` |/ __| |/ _` | |
- | |____| (_) | | | \__ \| (_, | (_) | |  | (_, | (__| | (_, | |
+ | |____| (_) | | | \__ \| (_| | (_) | |  | (_| | (__| | (_| | |
   \_____|\___/|_| |_|___(_)__,_|\___/|_|   \__,_|\___|_|\__,_|_| 
+    )";
+
+    string headerText2 = R"(
+  _______  _______  _______  _______  _______  _______  _______  _______ 
+ |       ||       ||       ||       ||       ||       ||       ||       |
+ |   _   ||   _   ||   _   ||   _   ||   _   ||   _   ||   _   ||   _   |
+ |  |_|  ||  |_|  ||  |_|  ||  |_|  ||  |_|  ||  |_|  ||  |_|  ||  |_|  |
+ |_______||_______||_______||_______||_______||_______||_______||_______|
+ |               CROSSWORD PUZZLE - CHALLENGE YOUR MIND               |
+ |   _   ||   _   ||   _   ||   _   ||   _   ||   _   ||   _   ||   _   |
+ |  |_|  ||  |_|  ||  |_|  ||  |_|  ||  |_|  ||  |_|  ||  |_|  ||  |_|  |
+ |_______||_______||_______||_______||_______||_______||_______||_______|
+ |       ||       ||       ||       ||       ||       ||       ||       |
+ |   _   ||   _   ||   _   ||   _   ||   _   ||   _   ||   _   ||   _   |
+ |  |_|  ||  |_|  ||  |_|  ||  |_|  ||  |_|  ||  |_|  ||  |_|  ||  |_|  |
+ |_______||_______||_______||_______||_______||_______||_______||_______|
     )";
 
     string projectTitle = "CROSSWORD PUZZLE PROJECT";
     string subtitle = "A Fun and Challenging Puzzle Experience";
     string developedBy = "Developed by Iconic Devs";
-    string pressEnter = "Press Enter to continue...";
+    string pressEnter = "Press Enter to Begin!";
 
     auto centerText = [](string text, int width = 80)
     {
@@ -72,22 +112,25 @@ void displayHeader()
         return string(max(padding, 0), ' ') + text;
     };
 
-    cout << colorCyan;
-    cout << centerText("") << "\n";
+    // Randomly alternate headers (optional)
+    string activeHeader = (rand() % 2 == 0) ? headerText1 : headerText2;
 
-    stringstream ss(headerText);
+    // Display Header Content
+    cout << colorCyan;
+    stringstream ss(activeHeader);
     string line;
     while (getline(ss, line))
     {
         cout << centerText(line) << "\n";
     }
-
     cout << centerText("") << "\n";
+
     cout << colorYellow << centerText(projectTitle) << resetColor << "\n";
     cout << colorMagenta << centerText(subtitle) << resetColor << "\n";
     cout << colorCyan << centerText(developedBy) << resetColor << "\n";
     cout << centerText("") << "\n";
 
+    // Blinking Press Enter Text
     bool blink = true;
     while (true)
     {
@@ -110,7 +153,6 @@ void displayHeader()
         }
     }
 }
-
 // Function to display the game features
 void displayGameFeatures()
 {
@@ -144,7 +186,7 @@ vector<vector<string>> initializeGrid(int rows, int cols)
 // Function to display the crossword grid with numbers for clues
 void displayGrid(const vector<vector<string>> &grid)
 {
-    cout << colorYellow;
+    cout << colorBrightCyan;
     cout << "\n=== CROSSWORD PUZZLE ===\n";
     for (int i = 0; i < grid.size(); i++)
     {
@@ -253,34 +295,48 @@ bool loginUser(const unordered_map<string, string> &users)
 }
 
 // Function to check if a word can be placed in the grid
-bool canPlaceWord(const vector<vector<string>> &grid, const string &word, int row, int col, const string &direction) {
-    if (direction == "across") {
+bool canPlaceWord(const vector<vector<string>> &grid, const string &word, int row, int col, const string &direction)
+{
+    if (direction == "across")
+    {
         if (col + word.length() > grid[0].size())
             return false; // Check bounds
-        for (int i = 0; i < word.length(); i++) {
+        for (int i = 0; i < word.length(); i++)
+        {
             if (grid[row][col + i] != " " && grid[row][col + i] != string(1, word[i]))
                 return false; // Conflict with existing letters
         }
-    } else if (direction == "down") {
+    }
+    else if (direction == "down")
+    {
         if (row + word.length() > grid.size())
             return false; // Check bounds
-        for (int i = 0; i < word.length(); i++) {
+        for (int i = 0; i < word.length(); i++)
+        {
             if (grid[row + i][col] != " " && grid[row + i][col] != string(1, word[i]))
                 return false; // Conflict with existing letters
         }
-    } else {
+    }
+    else
+    {
         return false; // Invalid direction
     }
     return true;
 }
 // Function to place a word in the grid
-void placeWord(vector<vector<string>> &grid, const string &word, int row, int col, const string &direction) {
-    if (direction == "across") {
-        for (int i = 0; i < word.length(); i++) {
+void placeWord(vector<vector<string>> &grid, const string &word, int row, int col, const string &direction)
+{
+    if (direction == "across")
+    {
+        for (int i = 0; i < word.length(); i++)
+        {
             grid[row][col + i] = string(1, word[i]);
         }
-    } else if (direction == "down") {
-        for (int i = 0; i < word.length(); i++) {
+    }
+    else if (direction == "down")
+    {
+        for (int i = 0; i < word.length(); i++)
+        {
             grid[row + i][col] = string(1, word[i]);
         }
     }
@@ -373,7 +429,8 @@ void displayVictoryMessage()
     this_thread::sleep_for(chrono::seconds(3));
 }
 // Function to play the crossword puzzle
-void playCrosswordPuzzle(const string &username) {
+void playCrosswordPuzzle(const string &username)
+{
     int rows = 10, cols = 10; // Smaller grid size
     vector<vector<string>> grid = initializeGrid(rows, cols);
 
@@ -388,24 +445,27 @@ void playCrosswordPuzzle(const string &username) {
         {"4", "down", 4, 0, "A type of tree with acorns", "OAK", false},
         {"6", "down", 6, 0, "A bird that cannot fly", "PENGUIN", false},
         {"8", "down", 8, 0, "A precious stone that's red", "RUBY", false},
-        {"10", "down", 10, 0, "Popular programming language", "PYTHON", false}
-    };
+        {"10", "down", 10, 0, "Popular programming language", "PYTHON", false}};
 
     // Place clue numbers in the grid
-    for (size_t i = 0; i < clues.size(); ++i) {
+    for (size_t i = 0; i < clues.size(); ++i)
+    {
         int maxAttempts = 100;
         bool placed = false;
-        while (!placed && maxAttempts--) {
+        while (!placed && maxAttempts--)
+        {
             int row = rand() % rows;
             int col = rand() % cols;
-            if (canPlaceWord(grid, clues[i].answer, row, col, clues[i].direction)) {
+            if (canPlaceWord(grid, clues[i].answer, row, col, clues[i].direction))
+            {
                 grid[row][col] = clues[i].number;
                 clues[i].row = row;
                 clues[i].col = col;
                 placed = true;
             }
         }
-        if (!placed) {
+        if (!placed)
+        {
             // Handle the case where the clue couldn't be placed
             clues.erase(clues.begin() + i);
             i--;
@@ -415,20 +475,25 @@ void playCrosswordPuzzle(const string &username) {
     // Start the timer
     auto startTime = chrono::steady_clock::now();
 
-    while (true) {
+    while (true)
+    {
         // Display the grid
         displayGrid(grid);
 
         // Display remaining clues
-        cout << colorGreen << "\n=== REMAINING CLUES ===\n" << resetColor << endl;
+        cout << colorGreen << "\n=== REMAINING CLUES ===\n"
+             << resetColor << endl;
         bool hasClues = false;
-        for (const auto &clue : clues) {
-            if (!clue.solved) {
+        for (const auto &clue : clues)
+        {
+            if (!clue.solved)
+            {
                 hasClues = true;
                 cout << clue.number << ". " << clue.clueText << "\n";
             }
         }
-        if (!hasClues) {
+        if (!hasClues)
+        {
             // All clues solved
             break;
         }
@@ -443,29 +508,40 @@ void playCrosswordPuzzle(const string &username) {
 
         // Find the corresponding clue
         auto it = find_if(clues.begin(), clues.end(),
-                          [&clueNumber](const Clue &c) { return c.number == clueNumber && !c.solved; });
-        if (it != clues.end()) {
-            if (it->answer == userAnswer) {
-                cout << colorYellow << "Correct! The word has been placed on the grid.\n" << resetColor << endl;
+                          [&clueNumber](const Clue &c)
+                          { return c.number == clueNumber && !c.solved; });
+        if (it != clues.end())
+        {
+            if (it->answer == userAnswer)
+            {
+                cout << colorYellow << "Correct! The word has been placed on the grid.\n"
+                     << resetColor << endl;
                 // Place the word in the grid
                 placeWord(grid, it->answer, it->row, it->col, it->direction);
                 it->solved = true;
-            } else {
+            }
+            else
+            {
                 cout << "Incorrect answer. Try again.\n";
             }
-        } else {
+        }
+        else
+        {
             cout << "Invalid clue number or already solved.\n";
         }
 
         // Check if all clues are solved
         bool allSolved = true;
-        for (const auto &clue : clues) {
-            if (!clue.solved) {
+        for (const auto &clue : clues)
+        {
+            if (!clue.solved)
+            {
                 allSolved = false;
                 break;
             }
         }
-        if (allSolved) {
+        if (allSolved)
+        {
             displayVictoryMessage();
             // Calculate final score based on time taken
             auto endTime = chrono::steady_clock::now();

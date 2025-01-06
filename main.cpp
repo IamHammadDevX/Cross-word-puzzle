@@ -177,9 +177,40 @@ void displayGameFeatures()
 }
 
 // Function to initialize the crossword grid with numbers for clues
-vector<vector<string>> initializeGrid(int rows, int cols)
+vector<vector<string>> initializeGrid(int rows, int cols, const vector<Clue> &clues)
 {
     vector<vector<string>> grid(rows, vector<string>(cols, " "));
+    // Fill the grid with random special characters
+    const string specialChars = "X";
+    srand(time(0)); // Seed for randomness
+
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            // Check if this cell is part of any clue
+            bool isClueCell = false;
+            for (const auto &clue : clues)
+            {
+                if (clue.direction == "across" && i == clue.row && j >= clue.col && j < clue.col + clue.answer.size())
+                {
+                    isClueCell = true;
+                    break;
+                }
+                if (clue.direction == "down" && j == clue.col && i >= clue.row && i < clue.row + clue.answer.size())
+                {
+                    isClueCell = true;
+                    break;
+                }
+            }
+            // Fill with special character if not a clue cell
+            if (!isClueCell)
+            {
+                grid[i][j] = string(1, specialChars[rand() % specialChars.size()]);
+            }
+        }
+    }
+
     return grid;
 }
 
@@ -407,7 +438,7 @@ bool isGridComplete(const vector<vector<string>> &grid, const vector<CluePositio
 // Function to display victory animation
 void displayVictoryMessage()
 {
-    clearScreen();
+    // clearScreen();
     string colorGreen = "\033[1;32m";
     string resetColor = "\033[0m";
 
@@ -432,7 +463,6 @@ void displayVictoryMessage()
 void playCrosswordPuzzle(const string &username)
 {
     int rows = 10, cols = 10; // Smaller grid size
-    vector<vector<string>> grid = initializeGrid(rows, cols);
 
     // Initialize clues
     vector<Clue> clues = {
@@ -447,28 +477,34 @@ void playCrosswordPuzzle(const string &username)
         {"8", "down", 8, 0, "A precious stone that's red", "RUBY", false},
         {"10", "down", 10, 0, "Popular programming language", "PYTHON", false}};
 
-    // Place clue numbers in the grid
-    for (size_t i = 0; i < clues.size(); ++i)
+    // Initialize the grid with special characters
+    vector<vector<string>> grid = initializeGrid(rows, cols, clues);
+
+    // Place clues in random positions
+    for (auto &clue : clues)
     {
-        int maxAttempts = 100;
+        int maxAttempts = 3;
         bool placed = false;
         while (!placed && maxAttempts--)
         {
+            // Choose a random starting point
             int row = rand() % rows;
             int col = rand() % cols;
-            if (canPlaceWord(grid, clues[i].answer, row, col, clues[i].direction))
+            // Check if the word can fit from this position
+            if (canPlaceWord(grid, clue.answer, row, col, clue.direction))
             {
-                grid[row][col] = clues[i].number;
-                clues[i].row = row;
-                clues[i].col = col;
+                clue.row = row;
+                clue.col = col;
                 placed = true;
+
+                // Place the clue number at the starting cell
+                grid[row][col] = clue.number;
             }
         }
         if (!placed)
         {
-            // Handle the case where the clue couldn't be placed
-            clues.erase(clues.begin() + i);
-            i--;
+            // Remove the clue if it couldn't be placed
+            clue.solved = true; // Mark it as solved to skip further processing
         }
     }
 
@@ -481,8 +517,7 @@ void playCrosswordPuzzle(const string &username)
         displayGrid(grid);
 
         // Display remaining clues
-        cout << colorGreen << "\n=== REMAINING CLUES ===\n"
-             << resetColor << endl;
+        cout << colorGreen << "\n=== REMAINING CLUES ===\n";
         bool hasClues = false;
         for (const auto &clue : clues)
         {
@@ -505,6 +540,7 @@ void playCrosswordPuzzle(const string &username)
         cout << "Enter your answer: ";
         cin >> userAnswer;
         transform(userAnswer.begin(), userAnswer.end(), userAnswer.begin(), ::toupper);
+        cout << resetColor << endl;
 
         // Find the corresponding clue
         auto it = find_if(clues.begin(), clues.end(),
@@ -522,12 +558,14 @@ void playCrosswordPuzzle(const string &username)
             }
             else
             {
-                cout << "Incorrect answer. Try again.\n";
+                cout << colorRed << "Incorrect answer. Try again.\n"
+                     << resetColor << endl;
             }
         }
         else
         {
-            cout << "Invalid clue number or already solved.\n";
+            cout << colorBrightRed << "Invalid clue number or already solved.\n"
+                 << resetColor << endl;
         }
 
         // Check if all clues are solved
@@ -542,6 +580,7 @@ void playCrosswordPuzzle(const string &username)
         }
         if (allSolved)
         {
+            displayGrid(grid);
             displayVictoryMessage();
             // Calculate final score based on time taken
             auto endTime = chrono::steady_clock::now();
@@ -560,7 +599,7 @@ int main()
     unordered_map<string, string> users = loadUserCredentials();
     bool loggedIn = false;
     string username;
-    cout << colorDONT;
+    cout << colorBrightRed;
     while (true)
     {
         cout << "\n=== MAIN MENU ===\n";

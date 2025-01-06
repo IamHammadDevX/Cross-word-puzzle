@@ -176,13 +176,10 @@ void displayGameFeatures()
     cout << resetColor << endl;
 }
 
-// Function to initialize the crossword grid with numbers for clues
 vector<vector<string>> initializeGrid(int rows, int cols, const vector<Clue> &clues)
 {
-    vector<vector<string>> grid(rows, vector<string>(cols, " "));
-    // Fill the grid with random special characters
-    const string specialChars = "X";
-    srand(time(0)); // Seed for randomness
+    vector<vector<string>> grid(rows, vector<string>(cols, " ")); // Initialize with spaces
+    srand(time(0));                                               // Seed for randomness
 
     for (int i = 0; i < rows; i++)
     {
@@ -203,10 +200,10 @@ vector<vector<string>> initializeGrid(int rows, int cols, const vector<Clue> &cl
                     break;
                 }
             }
-            // Fill with special character if not a clue cell
+            // Fill with space if not a clue cell
             if (!isClueCell)
             {
-                grid[i][j] = string(1, specialChars[rand() % specialChars.size()]);
+                grid[i][j] = " "; // Fill with space
             }
         }
     }
@@ -457,7 +454,7 @@ void displayVictoryMessage()
     cout << "You're a crossword master!" << endl;
     cout << resetColor << endl;
 
-    this_thread::sleep_for(chrono::seconds(3));
+    this_thread::sleep_for(chrono::seconds(2));
 }
 // Function to play the crossword puzzle
 void playCrosswordPuzzle(const string &username)
@@ -477,7 +474,7 @@ void playCrosswordPuzzle(const string &username)
         {"8", "down", 8, 0, "A precious stone that's red", "RUBY", false},
         {"10", "down", 10, 0, "Popular programming language", "PYTHON", false}};
 
-    // Initialize the grid with special characters
+    // Initialize the grid with spaces
     vector<vector<string>> grid = initializeGrid(rows, cols, clues);
 
     // Place clues in random positions
@@ -580,6 +577,18 @@ void playCrosswordPuzzle(const string &username)
         }
         if (allSolved)
         {
+            // Fill remaining spaces with "X"
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    if (grid[i][j] == " ")
+                    {
+                        grid[i][j] = "X";
+                    }
+                }
+            }
+
             displayGrid(grid);
             displayVictoryMessage();
             // Calculate final score based on time taken

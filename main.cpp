@@ -31,6 +31,8 @@ struct Clue
     string clueText;
     string answer;
     bool solved;
+    string hint;       // Hint includes starting letter and length
+    string difficulty; // Easy, Medium, Hard
 };
 const string USERS_FILE = "users.txt";
 const string LEADERBOARD_FILE = "leaderboard.txt";
@@ -43,17 +45,6 @@ void clearScreen()
 #else
     system("clear"); // For Linux/Mac
 #endif
-}
-vector<Clue> getRandomClues(vector<Clue> &allClues, int count)
-{
-    // Shuffle the clues
-    random_device rd;
-    mt19937 g(rd());
-    shuffle(allClues.begin(), allClues.end(), g);
-
-    // Select the first 'count' clues
-    vector<Clue> selectedClues(allClues.begin(), allClues.begin() + count);
-    return selectedClues;
 }
 string colorCyan = "\033[1;36m";
 string colorYellow = "\033[1;33m";
@@ -188,6 +179,62 @@ void displayGameFeatures()
     cout << resetColor << endl;
 }
 
+string selectDifficulty()
+{
+    cout << "\n=== SELECT DIFFICULTY ===\n";
+    cout << "1. Easy\n";
+    cout << "2. Medium\n";
+    cout << "3. Hard\n";
+    cout << "Choose an option: ";
+
+    int choice;
+    cin >> choice;
+
+    switch (choice)
+    {
+    case 1:
+        return "Easy";
+    case 2:
+        return "Medium";
+    case 3:
+        return "Hard";
+    default:
+        cout << "Invalid choice. Defaulting to Medium.\n";
+        return "Medium";
+    }
+}
+vector<Clue> getRandomClues(vector<Clue> &allClues, int count, const string &difficulty)
+{
+    // Filter clues by difficulty
+    vector<Clue> filteredClues;
+    for (const auto &clue : allClues)
+    {
+        if (clue.difficulty == difficulty)
+        {
+            filteredClues.push_back(clue);
+        }
+    }
+
+    // Debug: Print the number of filtered clues
+    cout << "Number of " << difficulty << " clues: " << filteredClues.size() << endl;
+
+    if (filteredClues.size() < count)
+    {
+        cout << "Not enough " << difficulty << " clues available. Defaulting to all available clues.\n";
+        count = filteredClues.size();
+    }
+
+    // Shuffle the filtered clues
+    random_device rd;
+    mt19937 g(rd());
+    shuffle(filteredClues.begin(), filteredClues.end(), g);
+
+    // Select the first 'count' clues
+    vector<Clue> selectedClues(filteredClues.begin(), filteredClues.begin() + count);
+    return selectedClues;
+}
+
+// grid initliazation
 vector<vector<string>> initializeGrid(int rows, int cols, const vector<Clue> &clues)
 {
     vector<vector<string>> grid(rows, vector<string>(cols, " ")); // Initialize with spaces
@@ -223,11 +270,11 @@ vector<vector<string>> initializeGrid(int rows, int cols, const vector<Clue> &cl
     return grid;
 }
 
-// Function to display the crossword grid with numbers for clues
-void displayGrid(const vector<vector<string>> &grid)
+void displayGrid(const vector<vector<string>> &grid, const vector<Clue> &clues)
 {
     cout << colorBrightCyan;
     cout << "\n=== CROSSWORD PUZZLE ===\n";
+    cout << resetColor << endl;
     for (int i = 0; i < grid.size(); i++)
     {
         for (int j = 0; j < grid[0].size(); j++)
@@ -238,7 +285,36 @@ void displayGrid(const vector<vector<string>> &grid)
 
         for (int j = 0; j < grid[0].size(); j++)
         {
-            cout << "| " << grid[i][j] << " ";
+            cout << "| ";
+            // Check if the cell is part of a clue answer
+            bool isClueCell = false;
+            for (const auto &clue : clues)
+            {
+                if (clue.direction == "across" && i == clue.row && j >= clue.col && j < clue.col + clue.answer.size())
+                {
+                    isClueCell = true;
+                    break;
+                }
+                if (clue.direction == "down" && j == clue.col && i >= clue.row && i < clue.row + clue.answer.size())
+                {
+                    isClueCell = true;
+                    break;
+                }
+            }
+            // Display clue answers in green and "X" in red
+            if (isClueCell)
+            {
+                cout << colorBrightYellow << grid[i][j] << resetColor;
+            }
+            else if (grid[i][j] == "X")
+            {
+                cout << colorBrightWhite << grid[i][j] << resetColor;
+            }
+            else
+            {
+                cout << grid[i][j];
+            }
+            cout << " ";
         }
         cout << "|\n";
     }
@@ -248,7 +324,6 @@ void displayGrid(const vector<vector<string>> &grid)
         cout << "+---";
     }
     cout << "+\n";
-    cout << resetColor << endl;
 }
 // Function to load user credentials from a file
 unordered_map<string, string> loadUserCredentials()
@@ -468,55 +543,83 @@ void displayVictoryMessage()
 
     this_thread::sleep_for(chrono::seconds(2));
 }
+void displayPenaltyMessage()
+{
+    // clearScreen();
+    string colorRed = "\033[1;31m";
+    string resetColor = "\033[0m";
+
+    cout << colorRed;
+    cout << R"(
+   ____                      _       _ 
+  / ___| __ _ _ __ ___   ___| | __ _| |
+ | |  _ / _` | '_ ` _ \ / _ \ |/ _` | |
+ | |_| | (_| | | | | | |  __/ | (_| |_|
+  \____|\__,_|_| |_| |_|\___|_|\__,_(_)
+    )" << endl;
+
+    cout << "\n⚠️ You have exceeded the maximum number of wrong answers. Game over! ⚠️" << endl;
+    cout << "Better luck next time!" << endl;
+    cout << resetColor << endl;
+
+    this_thread::sleep_for(chrono::seconds(2));
+}
 // Function to play the crossword puzzle
 void playCrosswordPuzzle(const string &username)
 {
-    int rows = 15, cols = 15; 
+    int rows = 15, cols = 15;        // Larger grid to accommodate more clues
+    int wrongAnswerCount = 0;        // Counter for wrong answers
+    const int MAX_WRONG_ANSWERS = 5; // Maximum allowed wrong answers
+    const int TOTAL_TIME = 300;      // Total time in seconds (5 minutes)
 
-    // Get 10 random clues
+    // Select difficulty level
+    string difficulty = selectDifficulty();
+
     vector<Clue> clues = {
-        {"1", "across", 0, 0, "Opposite of down", "UP", false},
-        {"2", "across", 0, 3, "A color of the sky", "BLUE", false},
-        {"3", "across", 0, 5, "A metal used in jewelry", "GOLD", false},
-        {"4", "across", 0, 7, "Opposite of cold", "HOT", false},
-        {"5", "across", 0, 9, "A yellow fruit", "BANANA", false},
-        {"6", "down", 2, 0, "Four-legged pet", "DOG", false},
-        {"7", "down", 4, 0, "A type of tree with acorns", "OAK", false},
-        {"8", "down", 6, 0, "A bird that cannot fly", "PENGUIN", false},
-        {"9", "down", 8, 0, "A precious stone that's red", "RUBY", false},
-        {"10", "down", 10, 0, "Popular programming language", "PYTHON", false},
-        {"11", "across", 1, 0, "A large body of water", "OCEAN", false},
-        {"12", "across", 1, 3, "Opposite of left", "RIGHT", false},
-        {"13", "across", 1, 5, "A planet in our solar system", "MARS", false},
-        {"14", "across", 1, 7, "A type of flower", "ROSE", false},
-        {"15", "across", 1, 9, "A musical instrument", "PIANO", false},
-        {"16", "down", 3, 0, "A type of vehicle", "CAR", false},
-        {"17", "down", 5, 0, "A type of fruit", "APPLE", false},
-        {"18", "down", 7, 0, "A type of bird", "EAGLE", false},
-        {"19", "down", 9, 0, "A type of fish", "SALMON", false},
-        {"20", "down", 11, 0, "A type of reptile", "SNAKE", false},
-        {"21", "across", 2, 0, "A type of sport", "SOCCER", false},
-        {"22", "across", 2, 3, "A type of animal", "TIGER", false},
-        {"23", "across", 2, 5, "A type of food", "PIZZA", false},
-        {"24", "across", 2, 7, "A type of drink", "COFFEE", false},
-        {"25", "across", 2, 9, "A type of tree", "MAPLE", false},
-        {"26", "down", 4, 0, "A type of insect", "BEE", false},
-        {"27", "down", 6, 0, "A type of mammal", "BEAR", false},
-        {"28", "down", 8, 0, "A type of reptile", "LIZARD", false},
-        {"29", "down", 10, 0, "A type of bird", "OWL", false},
-        {"30", "down", 12, 0, "A type of fish", "TUNA", false},
-        {"31", "across", 3, 0, "A type of vehicle", "TRUCK", false},
-        {"32", "across", 3, 3, "A type of fruit", "GRAPE", false},
-        {"33", "across", 3, 5, "A type of bird", "PARROT", false},
-        {"34", "across", 3, 7, "A type of fish", "SALMON", false},
-        {"35", "across", 3, 9, "A type of reptile", "CROCODILE", false},
-        {"36", "down", 5, 0, "A type of insect", "ANT", false},
-        {"37", "down", 7, 0, "A type of mammal", "DEER", false},
-        {"38", "down", 9, 0, "A type of reptile", "TURTLE", false},
-        {"39", "down", 11, 0, "A type of bird", "PENGUIN", false},
-        {"40", "down", 13, 0, "A type of fish", "SHARK", false}};
+        // Easy clues
+        {"1", "across", 0, 0, "Opposite of down", "UP", false, "Starts with 'U', 2 letters", "Easy"},
+        {"2", "across", 0, 3, "A color of the sky", "BLUE", false, "Starts with 'B', 4 letters", "Easy"},
+        {"3", "across", 0, 5, "A metal used in jewelry", "GOLD", false, "Starts with 'G', 4 letters", "Medium"},
+        {"4", "across", 0, 7, "Opposite of cold", "HOT", false, "Starts with 'H', 3 letters", "Easy"},
+        {"5", "across", 0, 9, "A yellow fruit", "BANANA", false, "Starts with 'B', 6 letters", "Medium"},
+        {"6", "down", 2, 0, "Four-legged pet", "DOG", false, "Starts with 'D', 3 letters", "Easy"},
+        {"7", "down", 4, 0, "A type of tree with acorns", "OAK", false, "Starts with 'O', 3 letters", "Medium"},
+        {"8", "down", 6, 0, "A bird that cannot fly", "PENGUIN", false, "Starts with 'P', 8 letters", "Hard"},
+        {"9", "down", 8, 0, "A precious stone that's red", "RUBY", false, "Starts with 'R', 4 letters", "Medium"},
+        {"10", "down", 10, 0, "Popular programming language", "PYTHON", false, "Starts with 'P', 6 letters", "Hard"},
+        {"11", "across", 1, 0, "A large body of water", "OCEAN", false, "Starts with 'O', 5 letters", "Easy"},
+        {"12", "across", 1, 3, "Opposite of left", "RIGHT", false, "Starts with 'R', 5 letters", "Easy"},
+        {"13", "across", 1, 5, "A planet in our solar system", "MARS", false, "Starts with 'M', 4 letters", "Medium"},
+        {"14", "across", 1, 7, "A type of flower", "ROSE", false, "Starts with 'R', 4 letters", "Easy"},
+        {"15", "across", 1, 9, "A musical instrument", "PIANO", false, "Starts with 'P', 5 letters", "Medium"},
+        {"16", "down", 3, 0, "A type of vehicle", "CAR", false, "Starts with 'C', 3 letters", "Easy"},
+        {"17", "down", 5, 0, "A type of fruit", "APPLE", false, "Starts with 'A', 5 letters", "Medium"},
+        {"18", "down", 7, 0, "A type of bird", "EAGLE", false, "Starts with 'E', 5 letters", "Medium"},
+        {"19", "down", 9, 0, "A type of fish", "SALMON", false, "Starts with 'S', 6 letters", "Hard"},
+        {"20", "down", 11, 0, "A type of reptile", "SNAKE", false, "Starts with 'S', 5 letters", "Medium"},
+        {"21", "across", 2, 0, "A type of sport", "SOCCER", false, "Starts with 'S', 6 letters", "Medium"},
+        {"22", "across", 2, 3, "A type of animal", "TIGER", false, "Starts with 'T', 5 letters", "Easy"},
+        {"23", "across", 2, 5, "A type of food", "PIZZA", false, "Starts with 'P', 5 letters", "Easy"},
+        {"24", "across", 2, 7, "A type of drink", "COFFEE", false, "Starts with 'C', 6 letters", "Medium"},
+        {"25", "across", 2, 9, "A type of tree", "MAPLE", false, "Starts with 'M', 5 letters", "Medium"},
+        {"26", "down", 4, 0, "A type of insect", "BEE", false, "Starts with 'B', 3 letters", "Easy"},
+        {"27", "down", 6, 0, "A type of mammal", "BEAR", false, "Starts with 'B', 4 letters", "Easy"},
+        {"28", "down", 8, 0, "A type of reptile", "LIZARD", false, "Starts with 'L', 6 letters", "Medium"},
+        {"29", "down", 10, 0, "A type of bird", "OWL", false, "Starts with 'O', 3 letters", "Easy"},
+        {"30", "down", 12, 0, "A type of fish", "TUNA", false, "Starts with 'T', 4 letters", "Easy"},
+        {"31", "across", 3, 0, "A type of vehicle", "TRUCK", false, "Starts with 'T', 5 letters", "Medium"},
+        {"32", "across", 3, 3, "A type of fruit", "GRAPE", false, "Starts with 'G', 5 letters", "Easy"},
+        {"33", "across", 3, 5, "A type of bird", "PARROT", false, "Starts with 'P', 6 letters", "Medium"},
+        {"34", "across", 3, 7, "A type of fish", "SALMON", false, "Starts with 'S', 6 letters", "Hard"},
+        {"35", "across", 3, 9, "A type of reptile", "CROCODILE", false, "Starts with 'C', 9 letters", "Hard"},
+        {"36", "down", 5, 0, "A type of insect", "ANT", false, "Starts with 'A', 3 letters", "Easy"},
+        {"37", "down", 7, 0, "A type of mammal", "DEER", false, "Starts with 'D', 4 letters", "Easy"},
+        {"38", "down", 9, 0, "A type of reptile", "TURTLE", false, "Starts with 'T', 6 letters", "Medium"},
+        {"39", "down", 11, 0, "A type of bird", "PENGUIN", false, "Starts with 'P', 8 letters", "Hard"},
+        {"40", "down", 13, 0, "A type of fish", "SHARK", false, "Starts with 'S', 5 letters", "Medium"}};
+    // Get 10 random clues based on difficulty
+    vector<Clue> selectedClues = getRandomClues(clues, 10, difficulty);
 
-    vector<Clue> selectedClues = getRandomClues(clues, 10);
     // Initialize the grid with spaces
     vector<vector<string>> grid = initializeGrid(rows, cols, selectedClues);
 
@@ -553,8 +656,25 @@ void playCrosswordPuzzle(const string &username)
 
     while (true)
     {
-        // Display the grid
-        displayGrid(grid);
+        // Calculate remaining time
+        auto currentTime = chrono::steady_clock::now();
+        int elapsedTime = chrono::duration_cast<chrono::seconds>(currentTime - startTime).count();
+        int remainingTime = TOTAL_TIME - elapsedTime;
+
+        // Check if time is up
+        if (remainingTime <= 0)
+        {
+            cout << colorBrightRed << "\nTime's up! Game over.\n"
+                 << resetColor << endl;
+            return; // End the game
+        }
+
+        // Display the grid with color-coded clue answers and "X"
+        displayGrid(grid, selectedClues);
+
+        // Display remaining time
+        cout << colorBrightYellow << "\nTime remaining: " << remainingTime << " seconds\n"
+             << resetColor;
 
         // Display remaining clues
         cout << colorGreen << "\n=== REMAINING CLUES ===\n";
@@ -573,39 +693,78 @@ void playCrosswordPuzzle(const string &username)
             break;
         }
 
-        // User input for answer
-        string clueNumber, userAnswer;
-        cout << "Enter the clue number: ";
-        cin >> clueNumber;
-        cout << "Enter your answer: ";
-        cin >> userAnswer;
-        transform(userAnswer.begin(), userAnswer.end(), userAnswer.begin(), ::toupper);
-        cout << resetColor << endl;
+        // Display the number of wrong answers remaining
+        cout << colorBrightRed << "\nWrong answers remaining: " << MAX_WRONG_ANSWERS - wrongAnswerCount << resetColor << "\n";
 
-        // Find the corresponding clue
-        auto it = find_if(selectedClues.begin(), selectedClues.end(),
-                          [&clueNumber](const Clue &c)
-                          { return c.number == clueNumber && !c.solved; });
-        if (it != selectedClues.end())
+        // User input for action
+        cout << "Enter the clue number to solve, or 'hint' for a hint: ";
+        string input;
+        cin >> input;
+
+        if (input == "hint")
         {
-            if (it->answer == userAnswer)
+            // User requests a hint
+            cout << "Enter the clue number for which you want a hint: ";
+            string clueNumber;
+            cin >> clueNumber;
+
+            // Find the corresponding clue
+            auto it = find_if(selectedClues.begin(), selectedClues.end(),
+                              [&clueNumber](const Clue &c)
+                              { return c.number == clueNumber && !c.solved; });
+            if (it != selectedClues.end())
             {
-                cout << colorYellow << "Correct! The word has been placed on the grid.\n"
-                     << resetColor << endl;
-                // Place the word in the grid
-                placeWord(grid, it->answer, it->row, it->col, it->direction);
-                it->solved = true;
+                cout << colorBrightCyan << "Hint for clue " << clueNumber << ": " << it->hint << resetColor << "\n";
             }
             else
             {
-                cout << colorRed << "Incorrect answer. Try again.\n"
+                cout << colorBrightRed << "Invalid clue number or already solved.\n"
                      << resetColor << endl;
             }
         }
         else
         {
-            cout << colorBrightRed << "Invalid clue number or already solved.\n"
-                 << resetColor << endl;
+            // User is solving a clue
+            string clueNumber = input;
+            string userAnswer;
+            cout << "Enter your answer: ";
+            cin >> userAnswer;
+            transform(userAnswer.begin(), userAnswer.end(), userAnswer.begin(), ::toupper);
+            cout << resetColor << endl;
+
+            // Find the corresponding clue
+            auto it = find_if(selectedClues.begin(), selectedClues.end(),
+                              [&clueNumber](const Clue &c)
+                              { return c.number == clueNumber && !c.solved; });
+            if (it != selectedClues.end())
+            {
+                if (it->answer == userAnswer)
+                {
+                    cout << colorYellow << "Correct! The word has been placed on the grid.\n"
+                         << resetColor << endl;
+                    // Place the word in the grid
+                    placeWord(grid, it->answer, it->row, it->col, it->direction);
+                    it->solved = true;
+                }
+                else
+                {
+                    wrongAnswerCount++; // Increment wrong answer counter
+                    cout << colorRed << "Incorrect answer. Try again.\n"
+                         << resetColor << endl;
+
+                    // Check if the user has exceeded the maximum wrong answers
+                    if (wrongAnswerCount >= MAX_WRONG_ANSWERS)
+                    {
+                        displayPenaltyMessage(); // Display the penalty message
+                        return;                  // End the game
+                    }
+                }
+            }
+            else
+            {
+                cout << colorBrightRed << "Invalid clue number or already solved.\n"
+                     << resetColor << endl;
+            }
         }
 
         // Check if all clues are solved
@@ -632,14 +791,22 @@ void playCrosswordPuzzle(const string &username)
                 }
             }
 
-            displayGrid(grid);
+            // Display the final grid with color-coded clue answers and "X"
+            displayGrid(grid, selectedClues);
             displayVictoryMessage();
+
             // Calculate final score based on time taken
             auto endTime = chrono::steady_clock::now();
             int timeTaken = chrono::duration_cast<chrono::seconds>(endTime - startTime).count();
-            int score = max(100 - timeTaken / 10, 10);
+            int baseScore = 100;                                   // Base score for completing the puzzle
+            int timeBonus = max(0, (TOTAL_TIME - timeTaken) / 10); // Bonus for finishing quickly
+            int finalScore = baseScore + timeBonus;
+
+            cout << colorBrightGreen << "Time taken: " << timeTaken << " seconds\n";
+            cout << "Final score: " << finalScore << resetColor << "\n";
+
             // Save to leaderboard and display it
-            saveLeaderboard(username, score, timeTaken);
+            saveLeaderboard(username, finalScore, timeTaken);
             displayLeaderboard();
             break;
         }

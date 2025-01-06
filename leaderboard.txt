@@ -26,3 +26,7 @@ virat18 96 40
 virat18 100 7
 virat18 93 72
 virat18 79 218
+virat18 86 144
+virat@18 83 179
+virat 85 157
+virat18 89 114

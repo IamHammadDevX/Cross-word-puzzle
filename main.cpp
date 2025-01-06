@@ -9,6 +9,7 @@
 #include <algorithm> // For transform
 #include <ctime>     // For timer
 #include <cstdlib>   // For rand() and srand()
+#include <random>
 using namespace std;
 
 // Structure to store clue positions
@@ -42,6 +43,17 @@ void clearScreen()
 #else
     system("clear"); // For Linux/Mac
 #endif
+}
+vector<Clue> getRandomClues(vector<Clue> &allClues, int count)
+{
+    // Shuffle the clues
+    random_device rd;
+    mt19937 g(rd());
+    shuffle(allClues.begin(), allClues.end(), g);
+
+    // Select the first 'count' clues
+    vector<Clue> selectedClues(allClues.begin(), allClues.begin() + count);
+    return selectedClues;
 }
 string colorCyan = "\033[1;36m";
 string colorYellow = "\033[1;33m";
@@ -459,26 +471,57 @@ void displayVictoryMessage()
 // Function to play the crossword puzzle
 void playCrosswordPuzzle(const string &username)
 {
-    int rows = 10, cols = 10; // Smaller grid size
+    int rows = 15, cols = 15; 
 
-    // Initialize clues
+    // Get 10 random clues
     vector<Clue> clues = {
         {"1", "across", 0, 0, "Opposite of down", "UP", false},
-        {"3", "across", 0, 3, "A color of the sky", "BLUE", false},
-        {"5", "across", 0, 5, "A metal used in jewelry", "GOLD", false},
-        {"7", "across", 0, 7, "Opposite of cold", "HOT", false},
-        {"9", "across", 0, 9, "A yellow fruit", "BANANA", false},
-        {"2", "down", 2, 0, "Four-legged pet", "DOG", false},
-        {"4", "down", 4, 0, "A type of tree with acorns", "OAK", false},
-        {"6", "down", 6, 0, "A bird that cannot fly", "PENGUIN", false},
-        {"8", "down", 8, 0, "A precious stone that's red", "RUBY", false},
-        {"10", "down", 10, 0, "Popular programming language", "PYTHON", false}};
+        {"2", "across", 0, 3, "A color of the sky", "BLUE", false},
+        {"3", "across", 0, 5, "A metal used in jewelry", "GOLD", false},
+        {"4", "across", 0, 7, "Opposite of cold", "HOT", false},
+        {"5", "across", 0, 9, "A yellow fruit", "BANANA", false},
+        {"6", "down", 2, 0, "Four-legged pet", "DOG", false},
+        {"7", "down", 4, 0, "A type of tree with acorns", "OAK", false},
+        {"8", "down", 6, 0, "A bird that cannot fly", "PENGUIN", false},
+        {"9", "down", 8, 0, "A precious stone that's red", "RUBY", false},
+        {"10", "down", 10, 0, "Popular programming language", "PYTHON", false},
+        {"11", "across", 1, 0, "A large body of water", "OCEAN", false},
+        {"12", "across", 1, 3, "Opposite of left", "RIGHT", false},
+        {"13", "across", 1, 5, "A planet in our solar system", "MARS", false},
+        {"14", "across", 1, 7, "A type of flower", "ROSE", false},
+        {"15", "across", 1, 9, "A musical instrument", "PIANO", false},
+        {"16", "down", 3, 0, "A type of vehicle", "CAR", false},
+        {"17", "down", 5, 0, "A type of fruit", "APPLE", false},
+        {"18", "down", 7, 0, "A type of bird", "EAGLE", false},
+        {"19", "down", 9, 0, "A type of fish", "SALMON", false},
+        {"20", "down", 11, 0, "A type of reptile", "SNAKE", false},
+        {"21", "across", 2, 0, "A type of sport", "SOCCER", false},
+        {"22", "across", 2, 3, "A type of animal", "TIGER", false},
+        {"23", "across", 2, 5, "A type of food", "PIZZA", false},
+        {"24", "across", 2, 7, "A type of drink", "COFFEE", false},
+        {"25", "across", 2, 9, "A type of tree", "MAPLE", false},
+        {"26", "down", 4, 0, "A type of insect", "BEE", false},
+        {"27", "down", 6, 0, "A type of mammal", "BEAR", false},
+        {"28", "down", 8, 0, "A type of reptile", "LIZARD", false},
+        {"29", "down", 10, 0, "A type of bird", "OWL", false},
+        {"30", "down", 12, 0, "A type of fish", "TUNA", false},
+        {"31", "across", 3, 0, "A type of vehicle", "TRUCK", false},
+        {"32", "across", 3, 3, "A type of fruit", "GRAPE", false},
+        {"33", "across", 3, 5, "A type of bird", "PARROT", false},
+        {"34", "across", 3, 7, "A type of fish", "SALMON", false},
+        {"35", "across", 3, 9, "A type of reptile", "CROCODILE", false},
+        {"36", "down", 5, 0, "A type of insect", "ANT", false},
+        {"37", "down", 7, 0, "A type of mammal", "DEER", false},
+        {"38", "down", 9, 0, "A type of reptile", "TURTLE", false},
+        {"39", "down", 11, 0, "A type of bird", "PENGUIN", false},
+        {"40", "down", 13, 0, "A type of fish", "SHARK", false}};
 
+    vector<Clue> selectedClues = getRandomClues(clues, 10);
     // Initialize the grid with spaces
-    vector<vector<string>> grid = initializeGrid(rows, cols, clues);
+    vector<vector<string>> grid = initializeGrid(rows, cols, selectedClues);
 
     // Place clues in random positions
-    for (auto &clue : clues)
+    for (auto &clue : selectedClues)
     {
         int maxAttempts = 3;
         bool placed = false;
@@ -516,7 +559,7 @@ void playCrosswordPuzzle(const string &username)
         // Display remaining clues
         cout << colorGreen << "\n=== REMAINING CLUES ===\n";
         bool hasClues = false;
-        for (const auto &clue : clues)
+        for (const auto &clue : selectedClues)
         {
             if (!clue.solved)
             {
@@ -540,10 +583,10 @@ void playCrosswordPuzzle(const string &username)
         cout << resetColor << endl;
 
         // Find the corresponding clue
-        auto it = find_if(clues.begin(), clues.end(),
+        auto it = find_if(selectedClues.begin(), selectedClues.end(),
                           [&clueNumber](const Clue &c)
                           { return c.number == clueNumber && !c.solved; });
-        if (it != clues.end())
+        if (it != selectedClues.end())
         {
             if (it->answer == userAnswer)
             {
@@ -567,7 +610,7 @@ void playCrosswordPuzzle(const string &username)
 
         // Check if all clues are solved
         bool allSolved = true;
-        for (const auto &clue : clues)
+        for (const auto &clue : selectedClues)
         {
             if (!clue.solved)
             {
@@ -617,7 +660,7 @@ int main()
         cout << "3. Start Game\n";
         cout << "4. View Features\n";
         cout << "5. Exit\n";
-        cout << "6. View Leaderboard\n"; // Added new option
+        cout << "6. View Leaderboard\n";
         cout << "Choose an option: ";
 
         int choice;

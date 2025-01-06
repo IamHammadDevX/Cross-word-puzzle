@@ -21,8 +21,7 @@ struct CluePosition
     string word;
 };
 
-struct Clue
-{
+struct Clue {
     string number;
     string direction;
     int row;
@@ -254,48 +253,34 @@ bool loginUser(const unordered_map<string, string> &users)
 }
 
 // Function to check if a word can be placed in the grid
-bool canPlaceWord(const vector<vector<string>> &grid, const string &word, int row, int col, const string &direction)
-{
-    if (direction == "across")
-    {
+bool canPlaceWord(const vector<vector<string>> &grid, const string &word, int row, int col, const string &direction) {
+    if (direction == "across") {
         if (col + word.length() > grid[0].size())
             return false; // Check bounds
-        for (int i = 0; i < word.length(); i++)
-        {
+        for (int i = 0; i < word.length(); i++) {
             if (grid[row][col + i] != " " && grid[row][col + i] != string(1, word[i]))
                 return false; // Conflict with existing letters
         }
-    }
-    else if (direction == "down")
-    {
+    } else if (direction == "down") {
         if (row + word.length() > grid.size())
             return false; // Check bounds
-        for (int i = 0; i < word.length(); i++)
-        {
+        for (int i = 0; i < word.length(); i++) {
             if (grid[row + i][col] != " " && grid[row + i][col] != string(1, word[i]))
                 return false; // Conflict with existing letters
         }
-    }
-    else
-    {
+    } else {
         return false; // Invalid direction
     }
     return true;
 }
 // Function to place a word in the grid
-void placeWord(vector<vector<string>> &grid, const string &word, int row, int col, const string &direction)
-{
-    if (direction == "across")
-    {
-        for (int i = 0; i < word.length(); i++)
-        {
+void placeWord(vector<vector<string>> &grid, const string &word, int row, int col, const string &direction) {
+    if (direction == "across") {
+        for (int i = 0; i < word.length(); i++) {
             grid[row][col + i] = string(1, word[i]);
         }
-    }
-    else if (direction == "down")
-    {
-        for (int i = 0; i < word.length(); i++)
-        {
+    } else if (direction == "down") {
+        for (int i = 0; i < word.length(); i++) {
             grid[row + i][col] = string(1, word[i]);
         }
     }
@@ -388,8 +373,7 @@ void displayVictoryMessage()
     this_thread::sleep_for(chrono::seconds(3));
 }
 // Function to play the crossword puzzle
-void playCrosswordPuzzle(const string &username)
-{
+void playCrosswordPuzzle(const string &username) {
     int rows = 10, cols = 10; // Smaller grid size
     vector<vector<string>> grid = initializeGrid(rows, cols);
 
@@ -404,27 +388,24 @@ void playCrosswordPuzzle(const string &username)
         {"4", "down", 4, 0, "A type of tree with acorns", "OAK", false},
         {"6", "down", 6, 0, "A bird that cannot fly", "PENGUIN", false},
         {"8", "down", 8, 0, "A precious stone that's red", "RUBY", false},
-        {"10", "down", 10, 0, "Popular programming language", "PYTHON", false}};
+        {"10", "down", 10, 0, "Popular programming language", "PYTHON", false}
+    };
 
     // Place clue numbers in the grid
-    for (size_t i = 0; i < clues.size(); ++i)
-    {
+    for (size_t i = 0; i < clues.size(); ++i) {
         int maxAttempts = 100;
         bool placed = false;
-        while (!placed && maxAttempts--)
-        {
+        while (!placed && maxAttempts--) {
             int row = rand() % rows;
             int col = rand() % cols;
-            if (canPlaceWord(grid, clues[i].answer, row, col, clues[i].direction))
-            {
+            if (canPlaceWord(grid, clues[i].answer, row, col, clues[i].direction)) {
                 grid[row][col] = clues[i].number;
                 clues[i].row = row;
                 clues[i].col = col;
                 placed = true;
             }
         }
-        if (!placed)
-        {
+        if (!placed) {
             // Handle the case where the clue couldn't be placed
             clues.erase(clues.begin() + i);
             i--;
@@ -434,25 +415,20 @@ void playCrosswordPuzzle(const string &username)
     // Start the timer
     auto startTime = chrono::steady_clock::now();
 
-    while (true)
-    {
+    while (true) {
         // Display the grid
         displayGrid(grid);
 
         // Display remaining clues
-        cout << colorGreen << "\n=== REMAINING CLUES ===\n"
-             << resetColor << endl;
+        cout << colorGreen << "\n=== REMAINING CLUES ===\n" << resetColor << endl;
         bool hasClues = false;
-        for (const auto &clue : clues)
-        {
-            if (!clue.solved)
-            {
+        for (const auto &clue : clues) {
+            if (!clue.solved) {
                 hasClues = true;
                 cout << clue.number << ". " << clue.clueText << "\n";
             }
         }
-        if (!hasClues)
-        {
+        if (!hasClues) {
             // All clues solved
             break;
         }
@@ -467,40 +443,29 @@ void playCrosswordPuzzle(const string &username)
 
         // Find the corresponding clue
         auto it = find_if(clues.begin(), clues.end(),
-                          [&clueNumber](const Clue &c)
-                          { return c.number == clueNumber && !c.solved; });
-        if (it != clues.end())
-        {
-            if (it->answer == userAnswer)
-            {
-                cout << colorYellow << "Correct! The word has been placed on the grid.\n"
-                     << resetColor << endl;
+                          [&clueNumber](const Clue &c) { return c.number == clueNumber && !c.solved; });
+        if (it != clues.end()) {
+            if (it->answer == userAnswer) {
+                cout << colorYellow << "Correct! The word has been placed on the grid.\n" << resetColor << endl;
                 // Place the word in the grid
                 placeWord(grid, it->answer, it->row, it->col, it->direction);
                 it->solved = true;
-            }
-            else
-            {
+            } else {
                 cout << "Incorrect answer. Try again.\n";
             }
-        }
-        else
-        {
+        } else {
             cout << "Invalid clue number or already solved.\n";
         }
 
         // Check if all clues are solved
         bool allSolved = true;
-        for (const auto &clue : clues)
-        {
-            if (!clue.solved)
-            {
+        for (const auto &clue : clues) {
+            if (!clue.solved) {
                 allSolved = false;
                 break;
             }
         }
-        if (allSolved)
-        {
+        if (allSolved) {
             displayVictoryMessage();
             // Calculate final score based on time taken
             auto endTime = chrono::steady_clock::now();

@@ -272,7 +272,7 @@ vector<vector<string>> initializeGrid(int rows, int cols, const vector<Clue> &cl
 
 void displayGrid(const vector<vector<string>> &grid, const vector<Clue> &clues)
 {
-    cout << colorBrightCyan;
+    cout << colorBrightYellow;
     cout << "\n=== CROSSWORD PUZZLE ===\n";
     cout << resetColor << endl;
     for (int i = 0; i < grid.size(); i++)
@@ -576,47 +576,58 @@ void playCrosswordPuzzle(const string &username)
     string difficulty = selectDifficulty();
 
     vector<Clue> clues = {
-        // Easy clues
-        {"1", "across", 0, 0, "Opposite of down", "UP", false, "Starts with 'U', 2 letters", "Easy"},
-        {"2", "across", 0, 3, "A color of the sky", "BLUE", false, "Starts with 'B', 4 letters", "Easy"},
-        {"3", "across", 0, 5, "A metal used in jewelry", "GOLD", false, "Starts with 'G', 4 letters", "Medium"},
-        {"4", "across", 0, 7, "Opposite of cold", "HOT", false, "Starts with 'H', 3 letters", "Easy"},
-        {"5", "across", 0, 9, "A yellow fruit", "BANANA", false, "Starts with 'B', 6 letters", "Medium"},
-        {"6", "down", 2, 0, "Four-legged pet", "DOG", false, "Starts with 'D', 3 letters", "Easy"},
-        {"7", "down", 4, 0, "A type of tree with acorns", "OAK", false, "Starts with 'O', 3 letters", "Medium"},
-        {"8", "down", 6, 0, "A bird that cannot fly", "PENGUIN", false, "Starts with 'P', 8 letters", "Hard"},
-        {"9", "down", 8, 0, "A precious stone that's red", "RUBY", false, "Starts with 'R', 4 letters", "Medium"},
-        {"10", "down", 10, 0, "Popular programming language", "PYTHON", false, "Starts with 'P', 6 letters", "Hard"},
-        {"11", "across", 1, 0, "A large body of water", "OCEAN", false, "Starts with 'O', 5 letters", "Easy"},
-        {"12", "across", 1, 3, "Opposite of left", "RIGHT", false, "Starts with 'R', 5 letters", "Easy"},
-        {"13", "across", 1, 5, "A planet in our solar system", "MARS", false, "Starts with 'M', 4 letters", "Medium"},
-        {"14", "across", 1, 7, "A type of flower", "ROSE", false, "Starts with 'R', 4 letters", "Easy"},
-        {"15", "across", 1, 9, "A musical instrument", "PIANO", false, "Starts with 'P', 5 letters", "Medium"},
-        {"16", "down", 3, 0, "A type of vehicle", "CAR", false, "Starts with 'C', 3 letters", "Easy"},
-        {"17", "down", 5, 0, "A type of fruit", "APPLE", false, "Starts with 'A', 5 letters", "Medium"},
-        {"18", "down", 7, 0, "A type of bird", "EAGLE", false, "Starts with 'E', 5 letters", "Medium"},
-        {"19", "down", 9, 0, "A type of fish", "SALMON", false, "Starts with 'S', 6 letters", "Hard"},
-        {"20", "down", 11, 0, "A type of reptile", "SNAKE", false, "Starts with 'S', 5 letters", "Medium"},
-        {"21", "across", 2, 0, "A type of sport", "SOCCER", false, "Starts with 'S', 6 letters", "Medium"},
-        {"22", "across", 2, 3, "A type of animal", "TIGER", false, "Starts with 'T', 5 letters", "Easy"},
-        {"23", "across", 2, 5, "A type of food", "PIZZA", false, "Starts with 'P', 5 letters", "Easy"},
-        {"24", "across", 2, 7, "A type of drink", "COFFEE", false, "Starts with 'C', 6 letters", "Medium"},
-        {"25", "across", 2, 9, "A type of tree", "MAPLE", false, "Starts with 'M', 5 letters", "Medium"},
-        {"26", "down", 4, 0, "A type of insect", "BEE", false, "Starts with 'B', 3 letters", "Easy"},
-        {"27", "down", 6, 0, "A type of mammal", "BEAR", false, "Starts with 'B', 4 letters", "Easy"},
-        {"28", "down", 8, 0, "A type of reptile", "LIZARD", false, "Starts with 'L', 6 letters", "Medium"},
-        {"29", "down", 10, 0, "A type of bird", "OWL", false, "Starts with 'O', 3 letters", "Easy"},
-        {"30", "down", 12, 0, "A type of fish", "TUNA", false, "Starts with 'T', 4 letters", "Easy"},
-        {"31", "across", 3, 0, "A type of vehicle", "TRUCK", false, "Starts with 'T', 5 letters", "Medium"},
-        {"32", "across", 3, 3, "A type of fruit", "GRAPE", false, "Starts with 'G', 5 letters", "Easy"},
-        {"33", "across", 3, 5, "A type of bird", "PARROT", false, "Starts with 'P', 6 letters", "Medium"},
-        {"34", "across", 3, 7, "A type of fish", "SALMON", false, "Starts with 'S', 6 letters", "Hard"},
-        {"35", "across", 3, 9, "A type of reptile", "CROCODILE", false, "Starts with 'C', 9 letters", "Hard"},
-        {"36", "down", 5, 0, "A type of insect", "ANT", false, "Starts with 'A', 3 letters", "Easy"},
-        {"37", "down", 7, 0, "A type of mammal", "DEER", false, "Starts with 'D', 4 letters", "Easy"},
-        {"38", "down", 9, 0, "A type of reptile", "TURTLE", false, "Starts with 'T', 6 letters", "Medium"},
-        {"39", "down", 11, 0, "A type of bird", "PENGUIN", false, "Starts with 'P', 8 letters", "Hard"},
-        {"40", "down", 13, 0, "A type of fish", "SHARK", false, "Starts with 'S', 5 letters", "Medium"}};
+        // Tech Related
+        {"1", "across", 0, 0, "Most popular search engine", "GOOGLE", false, "Starts with 'G', 6 letters", "Easy"},
+        {"2", "across", 0, 3, "A type of smartphone", "IPHONE", false, "Starts with 'I', 6 letters", "Easy"},
+        {"3", "across", 0, 5, "Creator of Windows OS", "MICROSOFT", false, "Starts with 'M', 9 letters", "Medium"},
+        {"4", "across", 0, 7, "Language of the web", "HTML", false, "Starts with 'H', 4 letters", "Easy"},
+        {"5", "across", 0, 9, "Social media owned by Meta", "FACEBOOK", false, "Starts with 'F', 8 letters", "Medium"},
+        {"6", "down", 2, 0, "Electric car company", "TESLA", false, "Starts with 'T', 5 letters", "Easy"},
+        {"7", "down", 4, 0, "Father of the computer", "TURING", false, "Starts with 'T', 6 letters", "Medium"},
+        {"8", "down", 6, 0, "Online shopping giant", "AMAZON", false, "Starts with 'A', 6 letters", "Easy"},
+        {"9", "down", 8, 0, "Popular programming language", "PYTHON", false, "Starts with 'P', 6 letters", "Medium"},
+        {"10", "down", 10, 0, "Creator of the iPhone", "STEVEJOBS", false, "Starts with 'S', 10 letters", "Hard"},
+
+        // English Vocabulary
+        {"11", "across", 1, 0, "Synonym of quick", "FAST", false, "Starts with 'F', 4 letters", "Easy"},
+        {"12", "across", 1, 3, "Opposite of strong", "WEAK", false, "Starts with 'W', 4 letters", "Easy"},
+        {"13", "across", 1, 5, "A color of purity", "WHITE", false, "Starts with 'W', 5 letters", "Medium"},
+        {"14", "across", 1, 7, "Another word for happy", "GLAD", false, "Starts with 'G', 4 letters", "Easy"},
+        {"15", "across", 1, 9, "A synonym of large", "BIG", false, "Starts with 'B', 3 letters", "Easy"},
+
+        // Famous Personalities
+        {"16", "down", 3, 0, "Discovered gravity", "NEWTON", false, "Starts with 'N', 6 letters", "Easy"},
+        {"17", "down", 5, 0, "Invented the light bulb", "EDISON", false, "Starts with 'E', 6 letters", "Easy"},
+        {"18", "down", 7, 0, "First president of the US", "WASHINGTON", false, "Starts with 'W', 10 letters", "Medium"},
+        {"19", "down", 9, 0, "Author of 'Hamlet'", "SHAKESPEARE", false, "Starts with 'S', 11 letters", "Medium"},
+        {"20", "down", 11, 0, "Famous for the theory of relativity", "EINSTEIN", false, "Starts with 'E', 8 letters", "Hard"},
+
+        // Famous Sports Personalities
+        {"21", "across", 2, 0, "Famous cricket batsman", "SACHIN", false, "Starts with 'S', 6 letters", "Easy"},
+        {"22", "across", 2, 3, "Football legend from Argentina", "MESSI", false, "Starts with 'M', 5 letters", "Easy"},
+        {"23", "across", 2, 5, "Portuguese football superstar", "RONALDO", false, "Starts with 'R', 7 letters", "Medium"},
+        {"24", "across", 2, 7, "Tennis Grand Slam champion", "FEDERER", false, "Starts with 'F', 7 letters", "Medium"},
+        {"25", "across", 2, 9, "American basketball icon", "JORDAN", false, "Starts with 'J', 6 letters", "Medium"},
+
+        // World Related
+        {"26", "down", 4, 0, "Capital of France", "PARIS", false, "Starts with 'P', 5 letters", "Easy"},
+        {"27", "down", 6, 0, "Longest river in the world", "NILE", false, "Starts with 'N', 4 letters", "Medium"},
+        {"28", "down", 8, 0, "Largest desert in the world", "SAHARA", false, "Starts with 'S', 6 letters", "Medium"},
+        {"29", "down", 10, 0, "The Great Wall is in this country", "CHINA", false, "Starts with 'C', 5 letters", "Easy"},
+        {"30", "down", 12, 0, "Famous tower in Italy", "PISA", false, "Starts with 'P', 4 letters", "Easy"},
+
+        // My Choice - Famous Current Era Cricketers and Indian Celebrities/Singers
+        {"31", "across", 3, 0, "Modern cricket legend from India", "VIRAT", false, "Starts with 'V', 5 letters", "Easy"},
+        {"32", "across", 3, 3, "India's famous spin bowler", "ASHWIN", false, "Starts with 'A', 6 letters", "Medium"},
+        {"33", "across", 3, 5, "Star Australian bowler", "CUMMINS", false, "Starts with 'C', 7 letters", "Medium"},
+        {"34", "across", 3, 7, "English fast bowler", "ARCHER", false, "Starts with 'A', 6 letters", "Medium"},
+        {"35", "across", 3, 9, "Pakistan's pace sensation", "SHAHEEN", false, "Starts with 'S', 7 letters", "Medium"},
+        {"36", "down", 5, 0, "Popular Indian playback singer", "ARJITSINGH", false, "Starts with 'A', 11 letters", "Hard"},
+        {"37", "down", 7, 0, "Famous Indian actor and producer", "SHAHRUKH", false, "Starts with 'S', 8 letters", "Medium"},
+        {"38", "down", 9, 0, "Famous Indian actress and dancer", "DEEPIKA", false, "Starts with 'D', 7 letters", "Medium"},
+        {"39", "down", 11, 0, "India's iconic Bollywood singer", "LATA", false, "Starts with 'L', 4 letters", "Easy"},
+        {"40", "down", 13, 0, "India's popular actor known for action", "AKSHAY", false, "Starts with 'A', 6 letters", "Medium"}};
+
     // Get 10 random clues based on difficulty
     vector<Clue> selectedClues = getRandomClues(clues, 10, difficulty);
 

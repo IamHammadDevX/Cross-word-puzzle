@@ -564,16 +564,29 @@ void displayPenaltyMessage()
 
     this_thread::sleep_for(chrono::seconds(2));
 }
-// Function to play the crossword puzzle
 void playCrosswordPuzzle(const string &username)
 {
     int rows = 15, cols = 15;        // Larger grid to accommodate more clues
     int wrongAnswerCount = 0;        // Counter for wrong answers
     const int MAX_WRONG_ANSWERS = 5; // Maximum allowed wrong answers
-    const int TOTAL_TIME = 300;      // Total time in seconds (5 minutes)
 
     // Select difficulty level
     string difficulty = selectDifficulty();
+
+    // Set total time based on difficulty
+    int TOTAL_TIME;
+    if (difficulty == "Easy")
+    {
+        TOTAL_TIME = 300; // 5 minutes for Easy
+    }
+    else if (difficulty == "Medium")
+    {
+        TOTAL_TIME = 240; // 4 minutes for Medium
+    }
+    else if (difficulty == "Hard")
+    {
+        TOTAL_TIME = 180; // 3 minutes for Hard
+    }
 
     vector<Clue> clues = {
         // Tech Related
